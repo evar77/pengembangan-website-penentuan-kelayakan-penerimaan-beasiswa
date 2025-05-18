@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penentuan Calon Mahasiswa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* input {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        } */
+        input, select {
+        background-color: #d6d6d6;  /* abu gelap */
+        border: none;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 10px 0;
+        width: 100%;
+        font-size: 14px;
+        color: #000;  /* warna teks */
+        box-sizing: border-box;
+    }
+
+    input::placeholder {
+        color: #555;  /* placeholder abu gelap */
+    }
+
+        button {
+            padding: 15px;
+            background-color: #a72828;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 25px auto;
+            border-radius: 25px;
+
+        }
+
+        button:hover {
+            background-color: #d44771;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+        <h1>Penentuan Kelayakan Penerima Beasiswa Mahasiswa</h1>
+        <p>Cek kelulusan Calon Penerima Beasiswa Mahasiswa berdasarkan IPK, Penghasilan, dan Prestasi</p>
+      </div>
+      
+    <form id="fuzzyForm">
+        <label for="nama">Nama Lengkap</label>
+        <input type="text" id="nama" name="nama" required placeholder="...">
+    
+        <label for="universitas">Universitas</label>
+        <input type="text" id="universitas" name="universitas" required placeholder="...">
+    
+        <label for="ipk">IPK (contoh:3.99)</label>
+        <input type="text" id="ipk" name="ipk" required placeholder="..." 
+        style="background-color:#d6d6d6; border:none; border-radius:8px; padding:10px; width:100%;">
+
+    
+        <label for="penghasilan">Penghasilan Orang Tua (contoh: 5.000.000)</label>
+        <input type="text" id="penghasilan" name="penghasilan" required placeholder="..." 
+        style="background-color:#d6d6d6; border:none; border-radius:8px; padding:10px; width:100%;">
+
+        <!-- Dropdown angka -->
+<label for="prestasi">Prestasi Non-Akademik</label>
+<select id="prestasi" name="prestasi" required
+style="background-color:#d6d6d6; border:none; border-radius:8px; padding:10px; width:100%;">
+  <option value="">...</option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+</select>
+
+        <!-- <label for="prestasi">Prestasi Non-Akademik (contoh: juara 1 lomba futsal)</label>
+        <input type="number" id="prestasi" name="prestasi" required min="0" max="3" step="1"> -->
+    
+        <button type="button" onclick="calculateFuzzy()">Hitung</button>
+    </form>
+    
+    
+
+    <div id="result">Hasil akan muncul di sini.</div>
+
+    <script>
+        function calculateFuzzy() {
+            const indeks = parseFloat(document.getElementById('ipk').value);
+            const penghasilan = parseFloat(document.getElementById('penghasilan').value);
+            const prestasi = parseFloat(document.getElementById('prestasi').value);
+    
+            // Membership functions for IPK
+            let ipk = { rendah: 0, sedang: 0, tinggi: 0 };
+            if (indeks <= 2.25) ipk.rendah = 1;
+            else if (indeks > 2.25 && indeks <= 2.82) ipk.rendah = (2.82 - indeks) / 0.57;
+            else ipk.rendah = 0;
+            if (indeks > 2.25 && indeks <= 2.82) ipk.sedang = (indeks - 2.25) / 0.57;
+            else if (indeks > 2.82 && indeks <= 3.39) ipk.sedang = (3.39 - indeks) / 0.57;
+            else ipk.sedang = 0;
+            if (indeks >= 3.39) ipk.tinggi = 1;
+            else if (indeks > 2.82 && indeks <= 3.39) ipk.tinggi = (indeks - 2.82) / 0.57;
+            else ipk.tinggi = 0;
+    
+            // Membership functions for Penghasilan
+            let p = { rendah: 0, sedang: 0, tinggi: 0 };
+            if (penghasilan <= 2) p.rendah = 1;
+            else if (penghasilan > 2 && penghasilan <= 4) p.rendah = (4 - penghasilan) / 2;
+            else p.rendah = 0;
+            if (penghasilan > 2 && penghasilan <= 4) p.sedang = (penghasilan - 2) / 2;
+            else if (penghasilan > 4 && penghasilan <= 6) p.sedang = (6 - penghasilan) / 2;
+            else p.sedang = 0;
+            if (penghasilan > 6) p.tinggi = 1;
+    
+            // Membership functions for Prestasi
+            let pr = { tidak: 0, sedikit: 0, banyak: 0 };
+            if (prestasi <= 1) pr.tidak = 1;
+            else if (prestasi > 1 && prestasi <= 2) pr.tidak = (2 - prestasi) / 1;
+            else pr.tidak = 0;
+            if (prestasi > 1 && prestasi <= 2) pr.sedikit = (prestasi - 1) / 1;
+            else if (prestasi > 2 && prestasi <= 3) pr.sedikit = (3 - prestasi) / 1;
+            else pr.sedikit = 0;
+            if (prestasi > 3) pr.banyak = 1;
+    
+            // Rules for fuzzy inference
+            const rules = [
+                { conditions: ['rendah', 'tinggi', 'tidak'], output: 0 },
+                { conditions: ['rendah', 'rendah', 'sedikit'], output: 0.5 },
+                { conditions: ['sedang', 'rendah', 'banyak'], output: 1 },
+                { conditions: ['tinggi', 'tinggi', 'tidak'], output: 0.5 },
+                { conditions: ['tinggi', 'rendah', 'banyak'], output: 1 },
+                { conditions: ['sedang', 'sedang', 'sedikit'], output: 0.5 },
+            ];
+    
+            let numerator = 0;
+            let denominator = 0;
+    
+            rules.forEach(rule => {
+                const ipkValue = ipk[rule.conditions[0]];
+                const penghasilanValue = p[rule.conditions[1]];
+                const prestasiValue = pr[rule.conditions[2]];
+    
+                const alpha = Math.min(ipkValue, penghasilanValue, prestasiValue);
+                numerator += alpha * rule.output;
+                denominator += alpha;
+            });
+    
+            let result = denominator !== 0 ? numerator / denominator : 0;
+    
+            document.getElementById('result').innerHTML = `
+                Hasil Defuzzifikasi: ${result.toFixed(2)}<br>
+                Status: ${result >= 0.5 ? 'LULUS' : 'TIDAK LULUS'}
+            `;
+        }
+    </script>
+    
+</body>
+
+</html>

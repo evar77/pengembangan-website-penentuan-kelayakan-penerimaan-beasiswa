@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<!-- Menentukan tipe dokumen HTML -->
+<html lang="id">
+  <!-- Bahasa dokumen adalah Bahasa Indonesia -->
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Menentukan encoding karakter -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Responsif di berbagai perangkat -->
+    <title>Penentuan Kelayakan Beasiswa</title>
+    <!-- Judul halaman -->
+    <style>
+      /* CSS untuk mendesain tampilan halaman */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh; /* Tinggi minimum layar penuh */
+      }
+
+      .container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px; /* Sudut melengkung */
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); /* Bayangan kotak */
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+      }
+
+      h1 {
+        color: #a72828;
+        margin-bottom: 10px;
+      }
+
+      p {
+        margin-bottom: 20px;
+        color: #555;
+      }
+
+      label {
+        display: block;
+        text-align: left;
+        margin-top: 15px;
+        font-weight: bold;
+      }
+
+      input,
+      select {
+        background-color: #d6d6d6;
+        border: none;
+        border-radius: 8px;
+        padding: 10px;
+        margin-top: 5px;
+        width: 100%;
+        font-size: 14px;
+        box-sizing: border-box;
+        color: #000;
+      }
+
+      input::placeholder {
+        color: #555;
+      }
+
+      button {
+        padding: 12px 20px;
+        background-color: #a72828;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 20px;
+        margin-right: 10px;
+      }
+
+      button:hover {
+        background-color: #d44771;
+      }
+
+      #result {
+        margin-top: 25px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        font-weight: bold;
+      }
+
+      .prestasi-item {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        width: 100%;
+        align-items: center;
+      }
+
+      .prestasi-item select,
+      .prestasi-item input {
+        flex: 1 1 45%;
+        min-width: 0;
+      }
+
+      .remove-btn {
+        background-color: #888;
+        color: #fff;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        min-width: 80px;
+      }
+
+      .remove-btn:hover {
+        background-color: #555;
+      }
+
+      #resetBtn {
+        display: none; /* Tombol reset disembunyikan dulu */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Container utama -->
+      <h1>Penentuan Kelayakan Penerima Beasiswa Mahasiswa</h1>
+      <p>Cek kelulusan berdasarkan IPK, Penghasilan, dan Prestasi</p>
+
+      <form id="fuzzyForm">
+        <!-- Form input data -->
+        <label for="nama">Nama Lengkap</label>
+        <input type="text" id="nama" name="nama" required placeholder="..." />
+
+        <label for="universitas">Universitas</label>
+        <input
+          type="text"
+          id="universitas"
+          name="universitas"
+          required
+          placeholder="..."
+        />
+
+        <label for="ipk">IPK</label>
+        <input
+          type="text"
+          id="ipk"
+          name="ipk"
+          required
+          placeholder="contoh: 3.50"
+        />
+
+        <label for="penghasilan">Penghasilan Orang Tua (Rp)</label>
+        <input
+          type="text"
+          id="penghasilan"
+          name="penghasilan"
+          required
+          placeholder="contoh: 5.000.000"
+        />
+
+        <label>Prestasi Non-Akademik</label>
+        <div id="prestasi-container">
+          <!-- Container untuk list prestasi -->
+          <div class="prestasi-item">
+            <select class="kategori-prestasi">
+              <option value="1">Kabupaten</option>
+              <option value="2">Provinsi</option>
+              <option value="3">Nasional</option>
+              <option value="4">Internasional</option>
+            </select>
+            <input
+              type="text"
+              class="keterangan-prestasi"
+              placeholder="Keterangan (opsional)"
+            />
+          </div>
+        </div>
+
+        <button type="button" onclick="tambahPrestasi()">
+          + Tambah Prestasi
+        </button>
+        <button type="button" onclick="calculateFuzzy()">Hitung</button>
+        <button type="button" id="resetBtn" onclick="resetForm()">
+          Hitung Ulang
+        </button>
+      </form>
+
+      <div id="result">Hasil akan muncul di sini.</div>
+    </div>
+
+    <script>
+      // Fungsi untuk menambahkan field prestasi baru
+      function tambahPrestasi() {
+        const container = document.getElementById('prestasi-container');
+        const div = document.createElement('div');
+        div.classList.add('prestasi-item');
+        div.innerHTML = `
+          <select class="kategori-prestasi">
+            <option value="1">Kabupaten</option>
+            <option value="2">Provinsi</option>
+            <option value="3">Nasional</option>
+            <option value="4">Internasional</option>
+          </select>
+          <input type="text" class="keterangan-prestasi" placeholder="Keterangan (opsional)" />
+          <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Hapus</button>
+        `;
+        container.appendChild(div);
+      }
+
+      // Fungsi utama fuzzy logic untuk menghitung kelayakan
+      function calculateFuzzy() {
+        // Ambil dan konversi input
+        const indeks = parseFloat(document.getElementById('ipk').value);
+        const penghasilanInput = document
+          .getElementById('penghasilan')
+          .value.replace(/\./g, '');
+        const penghasilan = parseFloat(penghasilanInput) / 1000000; // diubah ke juta
+
+        const prestasiSelects = document.querySelectorAll('.kategori-prestasi');
+        let totalPrestasi = 0;
+        prestasiSelects.forEach((select) => {
+          totalPrestasi += parseInt(select.value);
+        });
+
+        // Hitung rata-rata nilai prestasi
+        const rataPrestasi = prestasiSelects.length
+          ? totalPrestasi / prestasiSelects.length
+          : 0;
+
+        // Fuzzifikasi IPK
+        let ipk = { rendah: 0, sedang: 0, tinggi: 0 };
+        if (indeks <= 2.25) ipk.rendah = 1;
+        else if (indeks <= 2.82) ipk.rendah = (2.82 - indeks) / 0.57;
+        if (indeks > 2.25 && indeks <= 2.82)
+          ipk.sedang = (indeks - 2.25) / 0.57;
+        else if (indeks <= 3.39) ipk.sedang = (3.39 - indeks) / 0.57;
+        if (indeks >= 3.39) ipk.tinggi = 1;
+        else if (indeks > 2.82 && indeks <= 3.39)
+          ipk.tinggi = (indeks - 2.82) / 0.57;
+
+        // Fuzzifikasi penghasilan
+        let p = { rendah: 0, sedang: 0, tinggi: 0 };
+        if (penghasilan <= 2) p.rendah = 1;
+        else if (penghasilan <= 4) p.rendah = (4 - penghasilan) / 2;
+        if (penghasilan > 2 && penghasilan <= 4)
+          p.sedang = (penghasilan - 2) / 2;
+        else if (penghasilan <= 6) p.sedang = (6 - penghasilan) / 2;
+        if (penghasilan >= 6) p.tinggi = 1;
+
+        // Fuzzifikasi prestasi
+        let pr = { tidak: 0, sedikit: 0, banyak: 0 };
+        if (prestasiSelects.length === 0) {
+          pr.tidak = 1;
+        } else {
+          if (rataPrestasi <= 1.5) pr.tidak = 1;
+          else if (rataPrestasi <= 2.5) pr.tidak = (2.5 - rataPrestasi) / 1;
+          if (rataPrestasi > 1.5 && rataPrestasi <= 2.5)
+            pr.sedikit = (rataPrestasi - 1.5) / 1;
+          else if (rataPrestasi <= 3.5) pr.sedikit = (3.5 - rataPrestasi) / 1;
+          if (rataPrestasi >= 3.5) pr.banyak = 1;
+          else if (rataPrestasi > 2.5 && rataPrestasi <= 3.5)
+            pr.banyak = (rataPrestasi - 2.5) / 1;
+        }
+
+        // Aturan fuzzy (rule base)
+        const rules = [
+          { conditions: ['rendah', 'tinggi', 'tidak'], output: 0 },
+          { conditions: ['rendah', 'tinggi', 'sedikit'], output: 0 },
+          { conditions: ['rendah', 'tinggi', 'banyak'], output: 0 },
+          { conditions: ['rendah', 'sedang', 'tidak'], output: 0 },
+          { conditions: ['rendah', 'sedang', 'sedikit'], output: 0.25 },
+          { conditions: ['rendah', 'sedang', 'banyak'], output: 0.4 },
+          { conditions: ['rendah', 'rendah', 'tidak'], output: 0.25 },
+          { conditions: ['rendah', 'rendah', 'sedikit'], output: 0.5 },
+          { conditions: ['rendah', 'rendah', 'banyak'], output: 0.6 },
+          { conditions: ['sedang', 'tinggi', 'tidak'], output: 0.25 },
+          { conditions: ['sedang', 'tinggi', 'sedikit'], output: 0.4 },
+          { conditions: ['sedang', 'tinggi', 'banyak'], output: 0.6 },
+          { conditions: ['sedang', 'sedang', 'tidak'], output: 0.25 },
+          { conditions: ['sedang', 'sedang', 'sedikit'], output: 0.5 },
+          { conditions: ['sedang', 'sedang', 'banyak'], output: 0.75 },
+          { conditions: ['sedang', 'rendah', 'tidak'], output: 0.4 },
+          { conditions: ['sedang', 'rendah', 'sedikit'], output: 0.6 },
+          { conditions: ['sedang', 'rendah', 'banyak'], output: 1 },
+          { conditions: ['tinggi', 'tinggi', 'tidak'], output: 0.4 },
+          { conditions: ['tinggi', 'tinggi', 'sedikit'], output: 0.5 },
+          { conditions: ['tinggi', 'tinggi', 'banyak'], output: 0.75 },
+          { conditions: ['tinggi', 'sedang', 'tidak'], output: 0.5 },
+          { conditions: ['tinggi', 'sedang', 'sedikit'], output: 0.7 },
+          { conditions: ['tinggi', 'sedang', 'banyak'], output: 0.85 },
+          { conditions: ['tinggi', 'rendah', 'tidak'], output: 0.6 },
+          { conditions: ['tinggi', 'rendah', 'sedikit'], output: 0.8 },
+          { conditions: ['tinggi', 'rendah', 'banyak'], output: 1 },
+        ];
+
+        // Hitung defuzzifikasi
+        let numerator = 0;
+        let denominator = 0;
+
+        rules.forEach((rule) => {
+          const alpha = Math.min(
+            ipk[rule.conditions[0]],
+            p[rule.conditions[1]],
+            pr[rule.conditions[2]]
+          );
+          numerator += alpha * rule.output;
+          denominator += alpha;
+        });
+
+        const result = denominator !== 0 ? numerator / denominator : 0;
+
+        // Tampilkan hasil
+        document.getElementById('result').innerHTML = `
+          <b>Hasil Defuzzifikasi: ${result.toFixed(2)}</b><br>
+          Status: <b>${result >= 0.5 ? 'LULUS ✅' : 'TIDAK LULUS ❌'}</b>
+        `;
+        document.getElementById('resetBtn').style.display = 'inline-block';
+      }
+
+      // Fungsi untuk mereset form
+      function resetForm() {
+        document.getElementById('fuzzyForm').reset();
+        document.getElementById('result').innerHTML =
+          'Hasil akan muncul di sini.';
+        document.getElementById('resetBtn').style.display = 'none';
+        const container = document.getElementById('prestasi-container');
+        container.innerHTML = `
+          <div class="prestasi-item">
+            <select class="kategori-prestasi">
+              <option value="1">Kabupaten</option>
+              <option value="2">Provinsi</option>
+              <option value="3">Nasional</option>
+              <option value="4">Internasional</option>
+            </select>
+            <input type="text" class="keterangan-prestasi" placeholder="Keterangan (opsional)" />
+          </div>
+        `;
+      }
+    </script>
+  </body>
+</html>
